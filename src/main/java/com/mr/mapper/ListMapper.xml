@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.mr.mapper.ListMapper">
+
+    <sql id="selectSkuListByClass2sqlId">
+        SELECT
+            spu.*, spu.id spuId,
+            sku.id skuId,
+            sku.*
+        FROM
+            t_mall_product spu,
+            t_mall_sku sku
+        WHERE
+            spu.Id = sku.shp_id
+        AND spu.flbh2 = #{flbh2}
+    </sql>
+
+    <!-- 查询属性 集合-->
+    <select id="selectAttrListByClass2" resultMap="selectAttrListByClass2Id">
+        select
+          attr.id attrId,attr.*,
+          val.id valId ,val.*
+        from
+          t_mall_attr attr,
+          t_mall_value val
+        where
+          attr.Id = val.shxm_id
+        and attr.flbh2 = #{flbh2}
+    </select>
+    <resultMap id="selectAttrListByClass2Id" type="oBJECTTMallAttr" autoMapping="true">
+        <id column="attrId" property="id"></id>
+        <collection property="valueList" ofType="tMallValue" autoMapping="true">
+            <id column="valId" property="id"></id>
+        </collection>
+    </resultMap>
+
+    <!-- 查询sku 集合-->
+    <select id="selectSkuListByClass2" resultMap="selectSkuListByClass2Id">
+        <include refid="selectSkuListByClass2sqlId"></include>
+    </select>
+    <resultMap id="selectSkuListByClass2Id" type="oBJECTSku" autoMapping="true">
+        <id property="id" column="skuId"></id>
+            <association property="spu" javaType="tMallProduct" autoMapping="true">
+                <id property="id" column="spuId"></id>
+            </association>
+    </resultMap>
+
+    <select id="selectSkuListByAttr" resultMap="selectSkuListByClass2Id">
+        <include refid="selectSkuListByClass2sqlId"></include>
+        AND sku.Id IN (
+            SELECT
+                t0.sku_id
+            FROM
+              <foreach collection="attrValueList" separator="," item="av" index="i">
+                  (SELECT * FROM t_mall_sku_attr_value sav
+                  WHERE sav.shxm_id = #{av.shxmId} AND sav.shxzh_id = #{av.shxzhId}) t${i}
+              </foreach>
+            <if test="attrValueList.size > 1">
+                <where>
+                    <foreach collection="attrValueList" index="i">
+                        <if test="i > 0">
+                           t${i-1}.sku_id = t${i}.sku_id
+                        </if>
+                    </foreach>
+                </where>
+            </if>
+        )
+
+    </select>
+
+
+</mapper>

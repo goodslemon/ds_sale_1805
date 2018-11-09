@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.mr.mapper.ItemMapper">
+
+    <select id="selectSkuBySkuId" resultMap="selectSkuBySkuIdMap" parameterType="int">
+        SELECT
+            sku.Id AS sku_id,
+            sku.*, img.id AS img_id,
+            img.*, attr.shxm_mch AS shxMch,
+            CONCAT(val.shxzh, val.shxzh_mch) AS shxzh
+        FROM
+            t_mall_sku sku,
+            t_mall_attr attr,
+            t_mall_value val,
+            t_mall_product_image img,
+            t_mall_product spu,
+            t_mall_sku_attr_value av
+        WHERE
+            sku.shp_id = spu.Id
+        AND spu.Id = img.shp_id
+        AND sku.id = av.sku_id
+        AND av.shxm_id = attr.Id
+        AND av.shxzh_id = val.Id
+        AND sku.Id = #{skuId}
+    </select>
+    <resultMap id="selectSkuBySkuIdMap" type="tMallSkuItemVO" autoMapping="true">
+        <id property="id" column="sku_id"></id>
+        <collection property="imgList" ofType="com.mr.model.TMallProductImage"
+        autoMapping="true">
+            <id property="id" column="img_id"></id>
+        </collection>
+        <collection property="avList" ofType="com.mr.model.OBJECTAVVO"
+        autoMapping="true">
+        </collection>
+    </resultMap>
+
+    <select id="selectskuListBySpuId" resultType="com.mr.model.TMallSku">
+        select *   from t_mall_sku where shp_id  = #{spuId}
+    </select>
+</mapper>
